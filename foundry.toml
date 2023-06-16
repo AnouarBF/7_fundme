@@ -2,5 +2,8 @@
 src = "src"
 out = "out"
 libs = ["lib"]
+remappings = ["@chainlink/=lib/chainlink-brownie-contracts"]
+# Allow foundry write scripts in our machine.
+ffi = true
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config

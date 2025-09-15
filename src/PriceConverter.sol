@@ -12,7 +12,8 @@ library ConversionRate {
         (, int price, , , ) = _priceFeed.latestRoundData();
         if (price <= 0) revert FundMe__Bad_price();
         // Fix the unit
-        int roundedNumber = price * 1e10;
+        uint8 DECIMAL = 18 - _priceFeed.decimals();
+        int roundedNumber = price * int((10 ** DECIMAL));
         return uint(roundedNumber);
     }
 
@@ -22,6 +23,6 @@ library ConversionRate {
         AggregatorV3Interface _priceFeed
     ) public view returns (uint) {
         uint amountInUsd = (_amount * getPrice(_priceFeed)) / 1e18;
-        return amountInUsd;
+        return amountInUsd / 1e18;
     }
 }

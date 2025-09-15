@@ -4,16 +4,17 @@ pragma solidity ^0.8.0;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ConversionRate} from "./PriceConverter.sol";
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 error FundMe__Not_Sufficient_Fund();
 error FundMe__FailedWithdrawal();
 
-contract FundMe is Ownable {
+contract FundMe is Ownable, ReentrancyGuard {
     using ConversionRate for uint;
 
     // The owner is the deployer of this contract
     address private immutable i_owner;
-    uint private constant MINIMUM_USD = 5e18;
+    uint private constant MINIMUM_USD = 1000;
     address[] private s_funders;
     mapping(address => uint) private s_FunderAmount;
     mapping(address => bool) private s_hasFunded;
@@ -34,25 +35,30 @@ contract FundMe is Ownable {
     }
 
     // Fund function that users should call and send some eth to in order to fund the contract
-    function fund() public payable {
-        uint fundedAmount = msg.value.getConversion(s_priceFeed);
-        if (fundedAmount < MINIMUM_USD) revert FundMe__Not_Sufficient_Fund();
-        s_funders.push(msg.sender);
-        if (s_hasFunded[msg.sender]) {
-            s_FunderAmount[msg.sender] += fundedAmount;
+    function fund() public payable nonReentrant {
+        uint fundedAmount_usd = msg.value.getConversion(s_priceFeed);
+        address funder = msg.sender;
+        if (fundedAmount_usd < MINIMUM_USD) {
+            revert FundMe__Not_Sufficient_Fund();
         }
-        s_FunderAmount[msg.sender] = fundedAmount;
-        s_hasFunded[msg.sender] = true;
+        if (s_hasFunded[funder]) {
+            s_FunderAmount[funder] += msg.value;
+        } else {
+            s_funders.push(funder);
+            s_FunderAmount[funder] = msg.value;
+            s_hasFunded[funder] = true;
+        }
     }
 
     // Withdraw function that the owner of the contract should call in order to withdraw all the funds from the contract to his address
-    function withdraw() external onlyOwner {
-        for (uint index; index < s_funders.length; index++) {
-            address funder = s_funders[index];
+    function withdraw() external onlyOwner nonReentrant {
+        address[] memory funders = s_funders;
+        uint length = funders.length;
+        for (uint index; index < length; index++) {
+            address funder = funders[index];
             s_FunderAmount[funder] = 0;
             s_hasFunded[funder] = false;
         }
-
         (bool success, ) = payable(i_owner).call{value: address(this).balance}(
             ""
         );

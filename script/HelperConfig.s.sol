@@ -4,24 +4,28 @@ pragma solidity ^0.8.0;
 import {Script} from "forge-std/Script.sol";
 import {MockV3Aggregator} from "../test/mocks/MockAggregatorV3.sol";
 
-contract HelperConfig is Script {
-    uint8 private constant DECIMALS = 8;
-    int private constant INITIAL_ANSWER = 2000;
+abstract contract Constant {
+    uint8 public constant DECIMALS = 8;
+    int public constant INITIAL_ANSWER = 2000;
+    uint public constant SEPOLIA_CHAINID = 11155111;
+    uint public constant ZKSYNC_CHAINID = 300;
+}
+
+contract HelperConfig is Constant, Script {
+    struct NetworkConfig {
+        address priceFeed;
+    }
 
     NetworkConfig public activeNetwork;
 
     constructor() {
-        if (block.chainid == 11155111) {
+        if (block.chainid == SEPOLIA_CHAINID) {
             activeNetwork = get_Sepolia_config();
-        } else if (block.chainid == 300) {
+        } else if (block.chainid == ZKSYNC_CHAINID) {
             activeNetwork = get_ZKsync_sepolia_config();
         } else {
             activeNetwork = get_Anvil_config();
         }
-    }
-
-    struct NetworkConfig {
-        address priceFeed;
     }
 
     function get_Sepolia_config() internal pure returns (NetworkConfig memory) {

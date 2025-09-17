@@ -12,7 +12,6 @@ error FundMe__FailedWithdrawal();
 contract FundMe is Ownable, ReentrancyGuard {
     using ConversionRate for uint;
 
-    // The owner is the deployer of this contract
     address private immutable i_owner;
     uint private constant MINIMUM_USD = 1000;
     address[] private s_funders;
@@ -36,7 +35,7 @@ contract FundMe is Ownable, ReentrancyGuard {
 
     // Fund function that users should call and send some eth to in order to fund the contract
     function fund() public payable nonReentrant {
-        uint fundedAmount_usd = msg.value.getConversion(s_priceFeed);
+        uint fundedAmount_usd = (msg.value).getConversion(s_priceFeed);
         address funder = msg.sender;
         if (fundedAmount_usd < MINIMUM_USD) {
             revert FundMe__Not_Sufficient_Fund();
@@ -75,11 +74,19 @@ contract FundMe is Ownable, ReentrancyGuard {
         return s_hasFunded[funder];
     }
 
-    function AmountFunded(address funder) external view returns (uint) {
+    function amountFunded(address funder) external view returns (uint) {
         return s_FunderAmount[funder];
     }
 
     function getFunder(uint index) external view returns (address) {
         return s_funders[index];
+    }
+
+    function get_fundersNumber() external view returns (uint) {
+        return s_funders.length;
+    }
+
+    function get_PriceFeed() external view returns (address) {
+        return address(s_priceFeed);
     }
 }

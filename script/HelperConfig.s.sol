@@ -6,7 +6,7 @@ import {MockV3Aggregator} from "../test/mocks/MockAggregatorV3.sol";
 
 abstract contract Constant {
     uint8 public constant DECIMALS = 8;
-    int public constant INITIAL_ANSWER = 2000;
+    int public constant INITIAL_ANSWER = 4000e8;
     uint public constant SEPOLIA_CHAINID = 11155111;
     uint public constant ZKSYNC_CHAINID = 300;
 }

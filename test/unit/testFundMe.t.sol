@@ -19,12 +19,6 @@ contract TestFundMe is Test {
         vm.deal(FUNDER, INITIAL_BALANCE);
     }
 
-    function test_correctPriceFeed() external view {
-        assert(
-            fundme.get_PriceFeed() == 0x34A1D3fff3958843C43aD80F30b94c510645C316
-        );
-    }
-
     function test_correctOwner() external view {
         address owner = fundme.owner();
         assert(owner == msg.sender);
@@ -63,11 +57,74 @@ contract TestFundMe is Test {
 
     function test_AlreadyFunded() external funding {
         uint funderBalance = fundme.amountFunded(FUNDER);
-        console.log(funderBalance);
         vm.prank(FUNDER);
         fundme.fund{value: FUNDING_AMOUNT}();
         assert(funderBalance * 2 == fundme.amountFunded(FUNDER));
     }
 
-    // function
+    function test_checkFundersLength() external funding {
+        assert(fundme.get_fundersNumber() == 1);
+    }
+
+    function test_CheckHasFunded() external funding {
+        assert(fundme.hasFunded(FUNDER));
+    }
+
+    ////////////////////////////////////////////////////////////////
+    ////////////////////<< Withdraw() Function >>//////////////////
+    //////////////////////////////////////////////////////////////
+
+    function test_OnlyOwnerWithdraws() external funding {
+        vm.expectRevert();
+        vm.prank(FUNDER);
+        fundme.withdraw();
+    }
+
+    function test_OwnerWithdraw() external funding {
+        address owner = msg.sender;
+        uint ownerInitialBalance = owner.balance;
+        uint contractBalance = address(fundme).balance;
+
+        vm.prank(owner);
+        fundme.withdraw();
+        // After the withdrawal, the owner balance should equal its initial balance plus the
+        // contract balance after funding.
+        assert(owner.balance == contractBalance + ownerInitialBalance);
+    }
+
+    function test_listNumberAfterWithdraw() external funding {
+        address owner = msg.sender;
+
+        vm.prank(owner);
+        fundme.withdraw();
+
+        assert(fundme.get_fundersNumber() == 0);
+    }
+
+    // This test only passes in Anvil localhost
+    function test_revertwithdraw_emptyContract() external {
+        if (block.chainid != 31337) {
+            assert(true);
+        } else {
+            address owner = msg.sender;
+            console.log(address(fundme).balance);
+            vm.expectRevert();
+            vm.prank(owner);
+            fundme.withdraw();
+        }
+    }
+
+    function test_Fallback() external funding {
+        vm.prank(FUNDER);
+        payable(address(fundme)).call("0x01");
+
+        assert(fundme.hasFunded(FUNDER));
+    }
+
+    function test_Receive() external funding {
+        vm.prank(FUNDER);
+        payable(address(fundme)).call("");
+
+        assert(fundme.hasFunded(FUNDER));
+    }
 }

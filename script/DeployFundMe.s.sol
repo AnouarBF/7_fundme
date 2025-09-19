@@ -6,13 +6,13 @@ import {FundMe} from "../src/FundMe.sol";
 import {HelperConfig} from "./HelperConfig.s.sol";
 
 contract DeployFundMe is Script {
-    address private s_activeNetwork;
+    address private priceFeed;
 
     function run() external returns (FundMe) {
         HelperConfig config = new HelperConfig();
-        s_activeNetwork = config.activeNetwork();
+        priceFeed = config.activeNetwork();
         vm.startBroadcast(); //////////////////////////////////////////////////////////
-        FundMe fundMe = new FundMe(s_activeNetwork);
+        FundMe fundMe = new FundMe(priceFeed);
         vm.stopBroadcast(); ///////////////////////////////////////////////////////////
 
         return fundMe;

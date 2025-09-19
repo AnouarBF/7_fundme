@@ -6,17 +6,17 @@ import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/Ag
 error FundMe__Bad_price();
 error FundMe__Bad_Decimals_One();
 error FundMe__Bad_Decimals_two();
-error HopeItReverts();
+error FundMe__Stale_Price();
 
 library ConversionRate {
     // this function gets the price of eth in terms of usd using chainlink aggregator
     function getPrice(
         AggregatorV3Interface _priceFeed
     ) internal view returns (uint) {
-        (, int price, , , ) = _priceFeed.latestRoundData();
+        (, int price, , uint updatedAt, ) = _priceFeed.latestRoundData();
         if (price <= 0) revert FundMe__Bad_price();
+        if (block.timestamp - updatedAt > 1 hours) revert FundMe__Stale_Price();
         uint8 decimals = _priceFeed.decimals();
-        // if (decimals != 8) revert HopeItReverts(); /////////////////////
         uint roundedPrice_18 = uint(price) * (10 ** (18 - decimals));
         return roundedPrice_18;
     }

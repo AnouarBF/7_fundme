@@ -11,6 +11,8 @@ abstract contract Constant {
     uint public constant ZKSYNC_CHAINID = 300;
 }
 
+error HelperConfig__Invalid_ChainId();
+
 contract HelperConfig is Constant, Script {
     struct NetworkConfig {
         address priceFeed;
@@ -23,8 +25,10 @@ contract HelperConfig is Constant, Script {
             activeNetwork = get_Sepolia_config();
         } else if (block.chainid == ZKSYNC_CHAINID) {
             activeNetwork = get_ZKsync_sepolia_config();
-        } else {
+        } else if (block.chainid == 31337) {
             activeNetwork = get_Anvil_config();
+        } else {
+            revert HelperConfig__Invalid_ChainId();
         }
     }
 

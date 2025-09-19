@@ -70,6 +70,17 @@ contract TestFundMe is Test {
         assert(fundme.hasFunded(FUNDER));
     }
 
+    function test_MultipleFunder() external funding {
+        uint fundersNumber = 10;
+        for (uint i = 1; i < fundersNumber; i++) {
+            hoax(address(uint160(i)), INITIAL_BALANCE);
+            // vm.prank(address(uint160(i)));
+            fundme.fund{value: FUNDING_AMOUNT}();
+        }
+
+        assert(fundme.get_fundersNumber() == 10);
+    }
+
     ////////////////////////////////////////////////////////////////
     ////////////////////<< Withdraw() Function >>//////////////////
     //////////////////////////////////////////////////////////////
@@ -114,17 +125,22 @@ contract TestFundMe is Test {
         }
     }
 
-    function test_Fallback() external funding {
+    function test_Fallback() external {
         vm.prank(FUNDER);
-        payable(address(fundme)).call("0x01");
+        (bool success, ) = payable(address(fundme)).call{value: FUNDING_AMOUNT}(
+            "0x01"
+        );
 
-        assert(fundme.hasFunded(FUNDER));
+        assert(fundme.hasFunded(FUNDER) && success);
     }
 
-    function test_Receive() external funding {
+    function test_Receive() external {
         vm.prank(FUNDER);
-        payable(address(fundme)).call("");
+        // hoax(address(88), INITIAL_BALANCE);
+        (bool success, ) = payable(address(fundme)).call{value: FUNDING_AMOUNT}(
+            ""
+        );
 
-        assert(fundme.hasFunded(FUNDER));
+        assert(fundme.hasFunded(FUNDER) && success);
     }
 }

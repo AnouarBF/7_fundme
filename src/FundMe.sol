@@ -36,11 +36,15 @@ contract FundMe is Ownable, ReentrancyGuard {
 
     // Fund function that users should call and send some eth to in order to fund the contract
     function fund() public payable {
+        // Store the usd value and the sender address
         uint fundedAmount_usd = (msg.value).getConversion(s_priceFeed) / 1e18;
         address funder = msg.sender;
+        // Check the Valid funding amount in usd
         if (fundedAmount_usd < MINIMUM_USD) {
             revert FundMe__Not_Sufficient_Fund();
         }
+        // Update the funder status In case he has already funded,
+        // otherwise store the address and create a new funder caracteristics
         if (s_hasFunded[funder]) {
             s_FunderAmount[funder] += fundedAmount_usd;
         } else {
